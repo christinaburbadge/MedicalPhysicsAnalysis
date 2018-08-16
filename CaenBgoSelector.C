@@ -42,7 +42,6 @@ void CaenBgoSelector::CreateHistograms() {
 }
 
 void CaenBgoSelector::FillHistograms() {
-  
   //Quick and dirty energy calibration (60Co, 2 points) aug.2018 day 2
   Double_t det[2][2]={{19325.157, 21941.027},{20932.415, 242133.704}};
   Double_t energy[2]={1173.2, 1332.5};
