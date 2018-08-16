@@ -5,7 +5,6 @@
 #include "TLegend.h"
 
 void EnergyCalibration() {  
-
   gStyle->SetMarkerStyle(20);   //  g->SetMarkerStyle(20);
   gStyle->SetMarkerSize(1);
 
