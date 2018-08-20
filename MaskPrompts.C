@@ -93,6 +93,30 @@ void MaskPrompts(TFile* file, int threshold){
 		}
 	}
 
+	THnSparse* rawGGT = (THnSparse*)file->Get("gammaGammaEvT");
+	int GGbinsE1 = rawGGT->GetAxis(0)->GetNbins();
+	int GGbinsE2 = rawGGT->GetAxis(1)->GetNbins();
+	int GGbinsT = rawGGT->GetAxis(2)->GetNbins();
+	int GGbinsLin = rawGGT->GetNbins();
+	int GGbinContent;
+	if(maskGammaGamma && GGbinsT == nbinsX){
+		Int_t* coord[3];
+		THnSparse* promptGGT = (THnSparse*)rawGGT->Clone("promptGGT");
+		THnSparse* delayGGT = (THnSparse*)rawGGT->Clone("delayGGT");
+		for(i = 0; i< GGbinsLin ; i++){
+			GGbinContent = rawGGT->GetBinContent(i,coord);
+			if(beamOn[coord[2]] == 0){
+				promptGGT->SetBinContent(i,0);
+			}
+			else{
+				delayGGT->SetBinContent(i,0);
+			}	
+		}	
+		TH2D* delayGammaGamma = (TH2D*)delayGGT->Projection(0,1);
+		TH2D* promptGammaGamma = (TH2D*)promptGGT->Projection(0,1);
+	}
+	else{std::cout << "Skipping Gamma Gamma masking" << std::endl;
+
 	//If energy calibrations good, can sum data from detectors for higher statistics. Boolean set at top of file.
 
 	if(sumDetectors){
