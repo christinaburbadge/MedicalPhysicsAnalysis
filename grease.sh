@@ -8,8 +8,7 @@ fi
 if [$# -eq 1 ]; then
 echo "Greasing all subruns..."
 
-for file in `/bin/ls /tulkas/Miniball_MLL/MLL_OHW/run$1_???.mid`
-do
+for file in `/bin/ls /tulkas/Miniball_MLL/MLL_OHW/run$1_???.mid`; do
   grsisort -q --recommended $file OHW.cal
 done
 grsiproof --max-workers 10 $GRSISYS/myAnalysis/CaenTestSelector.C analysis$1_???
@@ -22,8 +21,7 @@ fi
 if [$# -eq 2 ]; then
 echo "Greasing run $1, subrun $2..."
 
-for file in `/bin/ls /tulkas/Miniball_MLL/MLL_OHW/run$1_$2.mid`
-do
+for file in `/bin/ls /tulkas/Miniball_MLL/MLL_OHW/run$1_$2.mid`; do
   grsisort -q --recommended $file OHW.cal
 done
 grsiproof --max-workers 10 $GRSISYS/myAnalysis/CaenTestSelector.C analysis$1_$2.root

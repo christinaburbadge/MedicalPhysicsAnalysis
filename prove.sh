@@ -17,4 +17,3 @@ echo "Proving run $1 subrun $2..."
 grsiproof --max-workers 10 $GRSISYS/myAnalysis/CaenTestSelector.C analysis$1_$2.root
 grsisort -l CaenTest$1_$2.root
 fi
-
