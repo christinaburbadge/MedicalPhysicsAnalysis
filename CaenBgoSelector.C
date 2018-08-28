@@ -10,13 +10,12 @@ void CaenBgoSelector::CreateHistograms() {
   fH2["hitPattern"] = new TH2D("hitPattern","hit Pattern",4,0,4.0,4,0,4.0);
 
   //Energy and Timing Histos
-  fH2["chanVsDetUnsup"] = new TH2D("chanVsDetUnsup","Raw #gamma Singles",650,0,65000,8,0,8); 
-  fH2["chanVsDetSup"] = new TH2D("chanVsDetSup", "compton suppresed labr spectrum", 650, 0, 65000, 8, 0, 8);
-  fH2["energyVsDetUnsup"] = new TH2D("energyVsDetUnsup","Energy Calibrated #gamma Singles",3000,0,6000,8,0,8);
+  fH2["energyVsDetUnsup"] = new TH2D("energyVsDetUnsup","Raw #gamma Singles",3000,0,3000,8,0,8); 
+  fH2["energyVsDetSup"] = new TH2D("energyVsDetSup", "compton suppresed labr spectrum", 3000, 0, 3000, 8, 0, 8);
   fH2["TDVsBGOEnergy1Unsup"] = new TH2D("TDVsBGOEnergy1Unsup","Time Diff Vs. Unsuppressed BGO Energy",400, -200.0, 200.0, 650,0,65000); 
   fH2["TDVsBGOEnergy1Sup"] = new TH2D("TDVsBGOEnergy1Sup","Time Diff Vs. BGO Energy",400, -200.0, 200.0, 650,0,65000); 
   fH1["TDVsBGOEnergy1Proj"] = new TH1D("TDVsBGOEnergy1Proj","Time Diff Vs. BGO Energy",300, -3000.0, 3000.0); 
-  fH2["labrVsBGOEnergy1"] = new TH2D("labrVsBGOEnergy1","labr energy  Vs. BGO Energy",650, 0, 65000, 650,0,65000); 
+  fH2["labrVsBGOEnergy1"] = new TH2D("labrVsBGOEnergy1","labr energy  Vs. BGO Energy",3000, 0, 3000, 650,0,65000); 
   fH2["TDVsEnergy"] = new TH2D("TDVsEnergy","#gamma Time Diff using GetTime() Vs. Energy",3000,0,6000,1000,-100,100);
   fH2["TDVsDet"] = new TH2D("TDVsDet","#gamma Time Diff using GetTime()",100,-5,5,8,0,8);
   
@@ -42,33 +41,21 @@ void CaenBgoSelector::CreateHistograms() {
 }
 
 void CaenBgoSelector::FillHistograms() {
-  //Quick and dirty energy calibration (60Co, 2 points) aug.2018 day 2
-  Double_t det[2][2]={{19325.157, 21941.027},{20932.415, 242133.704}};
-  Double_t energy[2]={1173.2, 1332.5};
-  Double_t p0[2]={0.,0.}; //intercepts (b=y-mx)
-  Double_t p1[2]={0.,0.}; //slopes (deltay/deltax)
-  p1[0] = (energy[1] - energy[0])/(det[0][1]-det[0][0]);
-  p1[1] = (energy[1] - energy[0])/(det[1][1]-det[1][0]);
-  p0[0] = energy[0] - p1[0]*det[0][0];
-  p0[1] = energy[0] - p1[1]*det[1][0];
-  
-
-  Double_t firstTs, lastTs;
+    Double_t firstTs=0.0, lastTs=0.0;
     
   // BGO Selectors (baseline channels)
   for(auto b = 0; b < fLaBrBgo->GetMultiplicity(); ++b){
     auto bgo = fLaBrBgo->GetLaBrBgoHit(b);          
     if(bgo->GetDetector()>=8 || bgo->GetDetector()<0){ return; } //GetDetector should return a channel 0 -7
-    fH2.at("chanVsDetUnsup")->Fill(bgo->GetEnergy(),bgo->GetDetector()+2);
+    fH2.at("energyVsDetUnsup")->Fill(bgo->GetEnergy(),bgo->GetDetector()+2);
   }
   
   //LaBr selectors 
   for(auto i = 0; i < fLaBr->GetMultiplicity(); ++i){
     auto labr = fLaBr->GetLaBrHit(i);          
     if(labr->GetDetector()>=8 || labr->GetDetector()<0){ return; } //GetDetector should return a channel 0 -7
-    fH2.at("chanVsDetUnsup")->Fill(labr->GetEnergy(),labr->GetDetector());
-    fH2.at(Form("energyVsTime%d", labr->GetDetector()))->Fill(labr->GetTime()/1e9,labr->GetEnergy()*p1[labr->GetDetector()] + p0[labr->GetDetector()]);
-    fH2.at("energyVsDetUnsup")->Fill(labr->GetEnergy()*p1[labr->GetDetector()] + p0[labr->GetDetector()],labr->GetDetector());
+    fH2.at("energyVsDetUnsup")->Fill(labr->GetEnergy(),labr->GetDetector());
+    fH2.at(Form("energyVsTime%d", labr->GetDetector()))->Fill(labr->GetTime()/1e9,labr->GetEnergy());
     fH1.at("labrTs")->Fill(labr->GetTimeStamp());	
 
     for(auto j=i+1; j < fLaBr->GetMultiplicity(); ++j){
@@ -77,10 +64,10 @@ void CaenBgoSelector::FillHistograms() {
       fH2.at("hitPattern")->Fill(labr->GetDetector(), labr2->GetDetector());
       if(labr->GetAddress()!=labr2->GetAddress()){
 	fH2.at("TDVsDet")->Fill(labr->GetTime() - labr2->GetTime(), labr->GetDetector());
-	fH2.at("TDVsEnergy")->Fill(labr->GetEnergy()*p1[labr->GetDetector()] + p0[labr->GetDetector()], labr->GetTime() - labr2->GetTime());
+	fH2.at("TDVsEnergy")->Fill(labr->GetEnergy(), labr->GetTime() - labr2->GetTime());
 	if(abs(labr->GetTime() - labr2->GetTime()) > 6. && abs(labr->GetTime()-labr2->GetTime()) < 9. ){
-	  Double_t eet[3] = {labr->GetEnergy()*p1[labr->GetDetector()] + p0[labr->GetDetector()], labr2->GetEnergy()*p1[labr2->GetDetector()] + p0[labr2->GetDetector()],labr->GetTime()/1e9};
-	  //fH2.at("gammaGammaE")->Fill(labr->GetEnergy()*p1[labr->GetDetector()] + p0[labr->GetDetector()], labr2->GetEnergy()*p1[labr2->GetDetector()] + p0[labr2->GetDetector()]);
+	  Double_t eet[3] = {labr->GetEnergy(), labr2->GetEnergy(), labr->GetTime()/1e9};
+	  //fH2.at("gammaGammaE")->Fill(labr->GetEnergy(), labr2->GetEnergy())
 	  // fHSparse.at("gammaGammaEvT")->Fill(eet);
 	}
 	else{
@@ -108,7 +95,7 @@ void CaenBgoSelector::FillHistograms() {
   //Suppressed LaBr Selector
   for(auto b = 0; b < fLaBr->GetSuppressedMultiplicity(fLaBrBgo); ++b){
     auto labr = fLaBr->GetSuppressedHit(b);          
-    fH2.at("chanVsDetSup")->Fill(labr->GetEnergy(), labr->GetDetector());
+    fH2.at("energyVsDetSup")->Fill(labr->GetEnergy(), labr->GetDetector());
 
     for(auto c = 0; c < fLaBrBgo->GetMultiplicity(); ++c){
       auto bgolabr = fLaBrBgo->GetHit(c);          
